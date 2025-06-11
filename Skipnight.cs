@@ -99,7 +99,7 @@ namespace Oxide.Plugins
                     Puts($"Active players: {totalPlayers}");
                 }
                 */
-                if (totalPlayers >= 2)
+                if (totalPlayers >= 1)
                 {
                     isVotingActive = true;
                     yesVotes = 0;
