@@ -10,10 +10,10 @@ namespace Oxide.Plugins
 {
     [Info("Skipnight", "Moonpie", "1.0.0")]
     [Description("Allows players to vote to skip the night.")]
+
     public class Skipnight : CovalencePlugin
     {
         private const string permVoteDay = "skipnight.use";
-        private const string permVoteDayAdmin = "skipnight.admin";
         private bool isVotingActive = false;
         private int yesVotes = 0;
         private int totalPlayers = 0;
@@ -24,6 +24,7 @@ namespace Oxide.Plugins
 
         private class ConfigData
         {
+            public int Votestart { get; set; }  
             public float VoteDuration { get; set; }
             public int RequiredPercentage { get; set; }
             public string GroupNameVip { get; set; }
@@ -35,6 +36,7 @@ namespace Oxide.Plugins
         {
             config = new ConfigData
             {
+                Votestart = 20,
                 VoteDuration = 60f,
                 RequiredPercentage = 31,
                 GroupNameVip = "vipplus",
@@ -64,7 +66,6 @@ namespace Oxide.Plugins
         private void Init()
         {
             permission.RegisterPermission(permVoteDay, this);
-            permission.RegisterPermission(permVoteDayAdmin, this);
             lang.RegisterMessages(new Dictionary<string, string>
             {
                 ["VoteStarted"] = "<color=#FFFF00>[Skipnight] A vote to skip the night has started! You have {0} seconds to vote. Type /skipnight to vote. {1} votes are needed to pass.</color>",
@@ -118,61 +119,6 @@ namespace Oxide.Plugins
                 HandleVoteCommand(player);
                 return;
             }
-
-            if (args.Length >= 1 && !player.HasPermission(permVoteDayAdmin))
-            {
-                player.Message(lang.GetMessage("NoPermission", this, player.Id));
-                return;
-            }
-
-            switch (args[0].ToLower())
-            {
-                case "reload":
-                    ReloadConfigCommand(player);
-                    break;
-
-                case "set":
-                    if (args.Length == 3)
-                    {
-                        switch (args[1].ToLower())
-                        {
-                            case "timevote":
-                                if (float.TryParse(args[2], out float newDuration))
-                                {
-                                    SetVoteDurationCommand(player, newDuration);
-                                }
-                                else
-                                {
-                                    player.Message(lang.GetMessage("InvalidCommand", this, player.Id));
-                                }
-                                break;
-
-                            case "requiredpercentage":
-                                if (int.TryParse(args[2], out int newPercentage) && newPercentage >= 1 && newPercentage <= 100)
-                                {
-                                    SetRequiredPercentageCommand(player, newPercentage);
-                                }
-                                else
-                                {
-                                    player.Message(lang.GetMessage("InvalidPercentage", this, player.Id));
-                                }
-                                break;
-
-                            default:
-                                player.Message(lang.GetMessage("InvalidCommand", this, player.Id));
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        player.Message(lang.GetMessage("InvalidCommand", this, player.Id));
-                    }
-                    break;
-
-                default:
-                    player.Message(lang.GetMessage("InvalidCommand", this, player.Id));
-                    break;
-            }
         }
 
         private void HandleVoteCommand(IPlayer player)
@@ -205,26 +151,6 @@ namespace Oxide.Plugins
             votedPlayers.Add(player.Id);
             yesVotes++;
             player.Message(string.Format(lang.GetMessage("VoteCount", this, player.Id), yesVotes, requiredVotes));
-        }
-
-        private void ReloadConfigCommand(IPlayer player)
-        {
-            LoadConfig();
-            player.Message(lang.GetMessage("ConfigReloaded", this, player.Id));
-        }
-
-        private void SetVoteDurationCommand(IPlayer player, float newDuration)
-        {
-            config.VoteDuration = newDuration;
-            SaveConfig();
-            player.Message(string.Format(lang.GetMessage("VoteDurationSet", this, player.Id), newDuration));
-        }
-
-        private void SetRequiredPercentageCommand(IPlayer player, int newPercentage)
-        {
-            config.RequiredPercentage = newPercentage;
-            SaveConfig();
-            player.Message(string.Format(lang.GetMessage("RequiredPercentageSet", this, player.Id), newPercentage));
         }
 
         private void StartVote()
