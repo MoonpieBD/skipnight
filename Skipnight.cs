@@ -90,7 +90,7 @@ namespace Oxide.Plugins
         private void OnTick()
         {
             var time = TOD_Sky.Instance.Cycle.Hour;
-            if (Mathf.Floor(time) == 20f && !isVotingActive)
+            if (Mathf.Floor(time) == config.Votestart && !isVotingActive)
             {
                 totalPlayers = covalence.Players.Connected.Count();
                 /*
