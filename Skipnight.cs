@@ -68,18 +68,18 @@ namespace Oxide.Plugins
             permission.RegisterPermission(permVoteDay, this);
             lang.RegisterMessages(new Dictionary<string, string>
             {
-                ["VoteStarted"] = "<color=#FFFF00>[Skipnight] A vote to skip the night has started! You have {0} seconds to vote. Type /skipnight to vote. {1} votes are needed to pass.</color>",
-                ["VoteCount"] = "<color=#00FF00>[Skipnight] {0} votes out of {1} needed.</color>",
-                ["VotePassed"] = "<color=#00FF00>[Skipnight] The vote passed! {0} votes out of {1} needed. Skipping to day.</color>",
-                ["VoteFailed"] = "<color=#FF0000>[Skipnight] The vote failed. {0} votes out of {1} needed. The night will continue.</color>",
-                ["NoPermission"] = "<color=#FF0000>[Skipnight] You do not have permission to use this command.</color>",
-                ["AlreadyVoting"] = "<color=#FF0000>[Skipnight] A vote is already in progress.</color>",
-                ["AlreadyVoted"] = "<color=#FF0000>[Skipnight] You have already voted.</color>",
-                ["ConfigReloaded"] = "<color=#00FF00>[Skipnight] Configuration reloaded successfully.</color>",
-                ["InvalidCommand"] = "<color=#FF0000>[Skipnight] Invalid command usage. Use /skipnight set timevote <seconds> or /skipnight set requiredpercentage <percentage>.</color>",
-                ["VoteDurationSet"] = "<color=#00FF00>[Skipnight] Vote duration set to {0} seconds.</color>",
-                ["RequiredPercentageSet"] = "<color=#00FF00>[Skipnight] Required vote percentage set to {0}%.</color>",
-                ["InvalidPercentage"] = "<color=#FF0000>[Skipnight] Invalid percentage. Please enter a value between 1 and 100.</color>"
+                ["VoteStarted"] = "<color=#FFFF00>[Skip night] A vote to skip the night has started! You have {0} seconds to vote. Type /skipnight to vote. {1} votes are needed to pass.</color>",
+                ["VoteCount"] = "<color=#00FF00>[Skip night] {0} votes out of {1} needed.</color>",
+                ["VotePassed"] = "<color=#00FF00>[Skip night] The vote passed! {0} votes out of {1} needed. Skipping to day.</color>",
+                ["VoteFailed"] = "<color=#FF0000>[Skip night] The vote failed. {0} votes out of {1} needed. The night will continue.</color>",
+                ["NoPermission"] = "<color=#FF0000>[Skip night] You do not have permission to use this command.</color>",
+                ["AlreadyVoting"] = "<color=#FF0000>[Skip night] There is currently no vote active.</color>",
+                ["AlreadyVoted"] = "<color=#FF0000>[Skip night] You have already voted.</color>",
+                ["ConfigReloaded"] = "<color=#00FF00>[Skip night] Configuration reloaded successfully.</color>",
+                ["InvalidCommand"] = "<color=#FF0000>[Skip night] Invalid command usage. Use /skipnight set timevote <seconds> or /skipnight set requiredpercentage <percentage>.</color>",
+                ["VoteDurationSet"] = "<color=#00FF00>[Skip night] Vote duration set to {0} seconds.</color>",
+                ["RequiredPercentageSet"] = "<color=#00FF00>[Skip night] Required vote percentage set to {0}%.</color>",
+                ["InvalidPercentage"] = "<color=#FF0000>[Skip night] Invalid percentage. Please enter a value between 1 and 100.</color>"
             }, this);
             if (config.DebugMode)
             {
@@ -108,6 +108,10 @@ namespace Oxide.Plugins
                     StartVote();
                 }
 
+            }
+            if (isVotingActive)
+            {
+                CheckVotes();
             }
         }
 
@@ -166,27 +170,42 @@ namespace Oxide.Plugins
             voteTimer = timer.Once(config.VoteDuration, EndVote);
         }
 
-        private void EndVote()
+        private void CheckVotes()
         {
             int requiredVotes = Mathf.CeilToInt(totalPlayers * (config.RequiredPercentage / 100f));
-            isVotingActive = false;
-
-            if (config.DebugMode)
-            {
-                Puts("Skipnight vote ended");
-                Puts($"Votes with yes: {yesVotes}");
-                Puts($"Votes required: {requiredVotes}");
-            }
-
             if (yesVotes >= requiredVotes)
             {
-                BroadcastToServer("VotePassed", yesVotes, requiredVotes);
-                TOD_Sky.Instance.Cycle.Hour = 8f;
+                EndVote();
             }
-            else
+        }
+
+        private void EndVote()
+        {
+            Puts("Skipnight has ENDED");
+            voteTimer.Destroy();
+            if (isVotingActive)
             {
-                BroadcastToServer("VoteFailed", yesVotes, requiredVotes);
+                int requiredVotes = Mathf.CeilToInt(totalPlayers * (config.RequiredPercentage / 100f));
+                isVotingActive = false;
+
+                if (config.DebugMode)
+                {
+                    Puts("Skipnight vote ended");
+                    Puts($"Votes with yes: {yesVotes}");
+                    Puts($"Votes required: {requiredVotes}");
+                }
+
+                if (yesVotes >= requiredVotes)
+                {
+                    BroadcastToServer("VotePassed", yesVotes, requiredVotes);
+                    TOD_Sky.Instance.Cycle.Hour = 8f;
+                }
+                else
+                {
+                    BroadcastToServer("VoteFailed", yesVotes, requiredVotes);
+                }
             }
+
         }
 
         private void BroadcastToServer(string messageKey, params object[] args)
