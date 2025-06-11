@@ -8,10 +8,10 @@ using Newtonsoft.Json;
 
 namespace Oxide.Plugins
 {
-    [Info("Skipnight", "Moonpie", "1.0.0")]
-    [Description("Allows players to vote to skip the night.")]
+    [Info("SkipNight", "C-Rust", "1.2")]
+    [Description("Advanced player skipnight system")]
 
-    public class Skipnight : CovalencePlugin
+    public class SkipNight : CovalencePlugin
     {
         private const string permVoteDay = "skipnight.use";
         private bool isVotingActive = false;
@@ -93,13 +93,7 @@ namespace Oxide.Plugins
             if (Mathf.Floor(time) == config.Votestart && !isVotingActive)
             {
                 totalPlayers = covalence.Players.Connected.Count();
-                /*
-                if (config.DebugMode)
-                {
-                    Puts("Vote triggered");
-                    Puts($"Active players: {totalPlayers}");
-                }
-                */
+
                 if (totalPlayers >= 1)
                 {
                     isVotingActive = true;
