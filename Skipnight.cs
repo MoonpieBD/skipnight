@@ -7,14 +7,14 @@ using UnityEngine;
 using Newtonsoft.Json;
 
 namespace Oxide.Plugins
-{ 
-    [Info("SkipNight", "C-Rust", "1.2.2")]
+{
+    [Info("SkipNight", "C-Rust", "1.2.1")]
     [Description("Advanced player skipnight system")]
 
     public class SkipNight : CovalencePlugin
     {
         #region Configuration
-        private const string permVoteDay = "skipnight.use";
+        //private const string permVoteDay = "skipnight.use";
         private bool isVotingActive = false;
         private int yesVotes = 0;
         private int totalPlayers = 0;
@@ -27,7 +27,7 @@ namespace Oxide.Plugins
         private class Configuration
         {
             [JsonProperty("Which permission should be granted to players so they are allowed to vote")]
-            public const string permVoteDay = "skipnight.use";
+            public string permVoteDay = "skipnight.use";
 
             [JsonProperty("At what time should the vote start")]
             public int VoteStart = 19;
@@ -58,16 +58,11 @@ namespace Oxide.Plugins
             base.LoadConfig();
             try
             {
-                Votestart = 20,
-                VoteDuration = 60f,
-                RequiredPercentage = 31,
-                GroupNameVip = "vipplus",
-                AmountVIP = 3,
-                DebugMode = false
-            };
-            Puts("Config created");
-            SaveConfig();
-        }
+                config = Config.ReadObject<Configuration>();
+                if (config == null)
+                {
+                    throw new JsonException();
+                }
 
                 if (!config.ToDictionary().Keys.SequenceEqual(Config.ToDictionary(x => x.Key, x => x.Value).Keys))
                 {
@@ -107,6 +102,7 @@ namespace Oxide.Plugins
             if (config.DebugMode)
             {
                 Puts("Languagesfile loaded");
+                LogWarning("Languages are now loaded");
             }
         }
 
@@ -114,14 +110,13 @@ namespace Oxide.Plugins
 
         private void Init()
         {
-            permission.RegisterPermission(permVoteDay, this);
-            
+            permission.RegisterPermission(config.permVoteDay, this);
         }
 
         private void OnTick()
         {
             var time = TOD_Sky.Instance.Cycle.Hour;
-            if (Mathf.Floor(time) == config.Votestart && !isVotingActive)
+            if (Mathf.Floor(time) == config.VoteStart && !isVotingActive)
             {
                 totalPlayers = covalence.Players.Connected.Count();
 
@@ -153,7 +148,7 @@ namespace Oxide.Plugins
         private void HandleVoteCommand(IPlayer player)
         {
             int requiredVotes = Mathf.CeilToInt(totalPlayers * (config.RequiredPercentage / 100f));
-            if (!player.HasPermission(permVoteDay))
+            if (!player.HasPermission(config.permVoteDay))
             {
                 player.Message(lang.GetMessage("NoPermission", this, player.Id));
                 return;
