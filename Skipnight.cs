@@ -7,7 +7,7 @@ using UnityEngine;
 using Newtonsoft.Json;
 
 namespace Oxide.Plugins
-{
+{ 
     [Info("SkipNight", "C-Rust", "1.2.2")]
     [Description("Advanced player skipnight system")]
 
