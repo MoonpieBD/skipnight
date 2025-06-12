@@ -14,7 +14,6 @@ namespace Oxide.Plugins
     public class SkipNight : CovalencePlugin
     {
         #region Configuration
-        //private const string permVoteDay = "skipnight.use";
         private bool isVotingActive = false;
         private int yesVotes = 0;
         private int totalPlayers = 0;
@@ -108,10 +107,15 @@ namespace Oxide.Plugins
 
         #endregion Localization
 
+
+        #region Initialization
+
         private void Init()
         {
             permission.RegisterPermission(config.permVoteDay, this);
         }
+
+        #endregion Initialization
 
         private void OnTick()
         {
@@ -135,6 +139,8 @@ namespace Oxide.Plugins
             }
         }
 
+        #region Commands
+
         [Command("skipnight")]
         private void VoteDayCommand(IPlayer player, string command, string[] args)
         {
@@ -145,6 +151,10 @@ namespace Oxide.Plugins
             }
         }
 
+        #endregion Commands
+
+
+        #region Voting
         private void HandleVoteCommand(IPlayer player)
         {
             int requiredVotes = Mathf.CeilToInt(totalPlayers * (config.RequiredPercentage / 100f));
@@ -227,6 +237,8 @@ namespace Oxide.Plugins
             }
 
         }
+
+        #endregion Voting
 
         private void BroadcastToServer(string messageKey, params object[] args)
         {
