@@ -8,11 +8,12 @@ using Newtonsoft.Json;
 
 namespace Oxide.Plugins
 {
-    [Info("SkipNight", "C-Rust", "1.3")]
+    [Info("SkipNight", "C-Rust", "1.2.1")]
     [Description("Advanced player skipnight system")]
 
     public class SkipNight : CovalencePlugin
     {
+        #region Configuration
         private const string permVoteDay = "skipnight.use";
         private bool isVotingActive = false;
         private int yesVotes = 0;
@@ -20,25 +21,27 @@ namespace Oxide.Plugins
         private Timer voteTimer;
         private HashSet<string> votedPlayers;
 
-        private ConfigData config;
 
-        private class ConfigData
+        private Configuration config;
+
+        private class Configuration
         {
-            public int VoteStartAt { get; set; }  
-            public int TimeSetTo { get; set; }
+            public int Votestart { get; set; }  
             public float VoteDuration { get; set; }
             public int RequiredPercentage { get; set; }
             public string GroupNameVip { get; set; }
             public int AmountVIP { get; set; }
             public bool DebugMode { get; set; }
         }
-        
-        protected override void LoadDefaultConfig()
+
+        protected override void LoadDefaultConfig() => config = new Configuration();
+
+        protected override void LoadConfig()
         {
-            config = new ConfigData
+            base.LoadConfig();
+            try
             {
-                VoteStartAt = 20,
-                TimeSetTo = 7,
+                Votestart = 20,
                 VoteDuration = 60f,
                 RequiredPercentage = 31,
                 GroupNameVip = "vipplus",
@@ -49,39 +52,40 @@ namespace Oxide.Plugins
             SaveConfig();
         }
 
-        protected override void LoadConfig()
-        {
-            base.LoadConfig();
-            config = Config.ReadObject<ConfigData>();
-            if (config.DebugMode)
-            {
-                Puts("Config loaded");
+                if (!config.ToDictionary().Keys.SequenceEqual(Config.ToDictionary(x => x.Key, x => x.Value).Keys))
+                {
+                    LogWarning("Configuration looks outdated; updating and saving");
+                    SaveConfig();
+                }
             }
-            
+            catch
+            {
+                LogWarning($"Configuration file {Name}.json is invalid; using defaults");
+                LoadDefaultConfig();
+            }
         }
 
         protected override void SaveConfig()
         {
-            Config.WriteObject(config);
+            LogWarning($"Configuration changes saved to {Name}.json");
+            Config.WriteObject(config, true);
         }
 
-        private void Init()
+        #endregion
+
+        #region Localization
+
+        protected override void LoadDefaultMessages()
         {
-            permission.RegisterPermission(permVoteDay, this);
             lang.RegisterMessages(new Dictionary<string, string>
             {
-                ["VoteStarted"] = "<color=#FFFF00>[Skip night] A vote to skip the night has started! You have {0} seconds to vote. Type /skipnight to vote. {1} votes are needed to pass.</color>",
-                ["VoteCount"] = "<color=#00FF00>[Skip night] {0} votes out of {1} needed.</color>",
-                ["VotePassed"] = "<color=#00FF00>[Skip night] The vote passed! {0} votes out of {1} needed. Skipping to day.</color>",
-                ["VoteFailed"] = "<color=#FF0000>[Skip night] The vote failed. {0} votes out of {1} needed. The night will continue.</color>",
-                ["NoPermission"] = "<color=#FF0000>[Skip night] You do not have permission to use this command.</color>",
-                ["AlreadyVoting"] = "<color=#FF0000>[Skip night] There is currently no vote active.</color>",
-                ["AlreadyVoted"] = "<color=#FF0000>[Skip night] You have already voted.</color>",
-                ["ConfigReloaded"] = "<color=#00FF00>[Skip night] Configuration reloaded successfully.</color>",
-                ["InvalidCommand"] = "<color=#FF0000>[Skip night] Invalid command usage. Use /skipnight set timevote <seconds> or /skipnight set requiredpercentage <percentage>.</color>",
-                ["VoteDurationSet"] = "<color=#00FF00>[Skip night] Vote duration set to {0} seconds.</color>",
-                ["RequiredPercentageSet"] = "<color=#00FF00>[Skip night] Required vote percentage set to {0}%.</color>",
-                ["InvalidPercentage"] = "<color=#FF0000>[Skip night] Invalid percentage. Please enter a value between 1 and 100.</color>"
+                ["VoteStarted"] = "<color=#FFFF00>[Skip Night] A vote to skip the night has started! You have {0} seconds to vote. Type /skipnight to vote. {1} votes are needed to pass.</color>",
+                ["VoteCount"] = "<color=#00FF00>[Skip Night] {0} votes out of {1} needed.</color>",
+                ["VotePassed"] = "<color=#00FF00>[Skip Night] The vote passed! {0} votes out of {1} needed. Skipping to daytime.</color>",
+                ["VoteFailed"] = "<color=#FF0000>[Skip Night] The vote failed. {0} votes out of {1} needed. The night will continue.</color>",
+                ["NoPermission"] = "<color=#FF0000>[Skip Night] You do not have permission to use this command.</color>",
+                ["NoActiveVote"] = "<color=#FF0000>[Skip Night] There is currently no vote active.</color>",
+                ["AlreadyVoted"] = "<color=#FF0000>[Skip Night] You have already voted.</color>"
             }, this);
             if (config.DebugMode)
             {
@@ -89,10 +93,18 @@ namespace Oxide.Plugins
             }
         }
 
+        #endregion Localization
+
+        private void Init()
+        {
+            permission.RegisterPermission(permVoteDay, this);
+            
+        }
+
         private void OnTick()
         {
             var time = TOD_Sky.Instance.Cycle.Hour;
-            if (Mathf.Floor(time) == config.VoteStartAt && !isVotingActive)
+            if (Mathf.Floor(time) == config.Votestart && !isVotingActive)
             {
                 totalPlayers = covalence.Players.Connected.Count();
 
@@ -132,7 +144,7 @@ namespace Oxide.Plugins
 
             if (!isVotingActive)
             {
-                player.Message(lang.GetMessage("AlreadyVoting", this, player.Id));
+                player.Message(lang.GetMessage("NoActiveVote", this, player.Id));
                 return;
             }
 
