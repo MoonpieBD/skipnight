@@ -32,9 +32,6 @@ namespace Oxide.Plugins
             [JsonProperty("At what time should the vote start")]
             public int VoteStart = 19;
 
-            [JsonProperty("To what time should the time be changed to after a succesful vote")]
-            public int SetTimeTo = 7;
-
             [JsonProperty("How long should the vote take (seconds)")]
             public float VoteDuration = 60f;
 
@@ -61,11 +58,16 @@ namespace Oxide.Plugins
             base.LoadConfig();
             try
             {
-                config = Config.ReadObject<Configuration>();
-                if (config == null)
-                {
-                    throw new JsonException();
-                }
+                Votestart = 20,
+                VoteDuration = 60f,
+                RequiredPercentage = 31,
+                GroupNameVip = "vipplus",
+                AmountVIP = 3,
+                DebugMode = false
+            };
+            Puts("Config created");
+            SaveConfig();
+        }
 
                 if (!config.ToDictionary().Keys.SequenceEqual(Config.ToDictionary(x => x.Key, x => x.Value).Keys))
                 {
@@ -119,7 +121,7 @@ namespace Oxide.Plugins
         private void OnTick()
         {
             var time = TOD_Sky.Instance.Cycle.Hour;
-            if (Mathf.Floor(time) == config.VoteStart && !isVotingActive)
+            if (Mathf.Floor(time) == config.Votestart && !isVotingActive)
             {
                 totalPlayers = covalence.Players.Connected.Count();
 
@@ -221,7 +223,7 @@ namespace Oxide.Plugins
                 if (yesVotes >= requiredVotes)
                 {
                     BroadcastToServer("VotePassed", yesVotes, requiredVotes);
-                    TOD_Sky.Instance.Cycle.Hour = config.SetTimeTo;
+                    TOD_Sky.Instance.Cycle.Hour = 8f;
                 }
                 else
                 {
