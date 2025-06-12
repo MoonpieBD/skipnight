@@ -29,7 +29,7 @@ namespace Oxide.Plugins
             public string permVoteDay = "skipnight.use";
 
             [JsonProperty("At what time should the vote start")]
-            public int VoteStart = 19;
+            public int VoteStartTime = 19;
 
             [JsonProperty("How long should the vote take (seconds)")]
             public float VoteDuration = 60f;
@@ -38,7 +38,7 @@ namespace Oxide.Plugins
             public int RequiredPercentage = 31;
 
             [JsonProperty("Which group's vote is worth more than one vote")]
-            public string GroupNameVip = "vipplus";
+            public string GroupNameVIP = "vipplus";
 
             [JsonProperty("How many votes is the above group's vote actually worth")]
             public int AmountVIP = 3;
@@ -100,7 +100,6 @@ namespace Oxide.Plugins
             }, this);
             if (config.DebugMode)
             {
-                Puts("Languagesfile loaded");
                 LogWarning("Languages are now loaded");
             }
         }
@@ -120,7 +119,7 @@ namespace Oxide.Plugins
         private void OnTick()
         {
             var time = TOD_Sky.Instance.Cycle.Hour;
-            if (Mathf.Floor(time) == config.VoteStart && !isVotingActive)
+            if (Mathf.Floor(time) == config.VoteStartTime && !isVotingActive)
             {
                 totalPlayers = covalence.Players.Connected.Count();
 
@@ -175,7 +174,7 @@ namespace Oxide.Plugins
                 player.Message(lang.GetMessage("AlreadyVoted", this, player.Id));
                 return;
             }
-            if (permission.UserHasGroup(player.Id, config.GroupNameVip))
+            if (permission.UserHasGroup(player.Id, config.GroupNameVIP))
             {
                 yesVotes += config.AmountVIP;
                 votedPlayers.Add(player.Id);
@@ -211,7 +210,6 @@ namespace Oxide.Plugins
 
         private void EndVote()
         {
-            Puts("Skipnight has ENDED");
             voteTimer.Destroy();
             if (isVotingActive)
             {
