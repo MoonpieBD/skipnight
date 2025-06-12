@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace Oxide.Plugins
 {
-    [Info("SkipNight", "C-Rust", "1.2")]
+    [Info("SkipNight", "C-Rust", "1.3")]
     [Description("Advanced player skipnight system")]
 
     public class SkipNight : CovalencePlugin
@@ -24,7 +24,8 @@ namespace Oxide.Plugins
 
         private class ConfigData
         {
-            public int Votestart { get; set; }  
+            public int VoteStartAt { get; set; }  
+            public int TimeSetTo { get; set; }
             public float VoteDuration { get; set; }
             public int RequiredPercentage { get; set; }
             public string GroupNameVip { get; set; }
@@ -36,7 +37,8 @@ namespace Oxide.Plugins
         {
             config = new ConfigData
             {
-                Votestart = 20,
+                VoteStartAt = 20,
+                TimeSetTo = 7,
                 VoteDuration = 60f,
                 RequiredPercentage = 31,
                 GroupNameVip = "vipplus",
@@ -90,7 +92,7 @@ namespace Oxide.Plugins
         private void OnTick()
         {
             var time = TOD_Sky.Instance.Cycle.Hour;
-            if (Mathf.Floor(time) == config.Votestart && !isVotingActive)
+            if (Mathf.Floor(time) == config.VoteStartAt && !isVotingActive)
             {
                 totalPlayers = covalence.Players.Connected.Count();
 
@@ -192,7 +194,7 @@ namespace Oxide.Plugins
                 if (yesVotes >= requiredVotes)
                 {
                     BroadcastToServer("VotePassed", yesVotes, requiredVotes);
-                    TOD_Sky.Instance.Cycle.Hour = 8f;
+                    TOD_Sky.Instance.Cycle.Hour = config.TimeSetTo;
                 }
                 else
                 {
