@@ -90,13 +90,13 @@ namespace Oxide.Plugins
         {
             lang.RegisterMessages(new Dictionary<string, string>
             {
-                ["VoteStarted"] = "<color=#FFFF00>[Skip Night] A vote to skip the night has started! You have {0} seconds to vote. Type /skipnight to vote. {1} votes are needed to pass.</color>",
-                ["VoteCount"] = "<color=#00FF00>[Skip Night] {0} votes out of {1} needed.</color>",
-                ["VotePassed"] = "<color=#00FF00>[Skip Night] The vote passed! {0} votes out of {1} needed. Skipping to daytime.</color>",
-                ["VoteFailed"] = "<color=#FF0000>[Skip Night] The vote failed. {0} votes out of {1} needed. The night will continue.</color>",
-                ["NoPermission"] = "<color=#FF0000>[Skip Night] You do not have permission to use this command.</color>",
-                ["NoActiveVote"] = "<color=#FF0000>[Skip Night] There is currently no vote active.</color>",
-                ["AlreadyVoted"] = "<color=#FF0000>[Skip Night] You have already voted.</color>"
+                ["VoteStart"] = "<color=#FFFF00>[Skip Night] A vote to skip the night has started! You have {0} seconds to vote. Type /skipnight to vote. {1} votes are needed to pass.</color>",
+                ["VoteAmount"] = "<color=#00FF00>[Skip Night] Your vote made the total untill now: {0} votes out of {1} needed.</color>",
+                ["VoteSuccess"] = "<color=#00FF00>[Skip Night] You want daytime! There were {0} votes out of {1} needed. Skipping to daytime.</color>",
+                ["VoteFail"] = "<color=#FF0000>[Skip Night] The vote failed. {0} votes out of {1} needed. The night will continue.</color>",
+                ["PermissionIssue"] = "<color=#FF0000>[Skip Night] You do not have permission to use this command.</color>",
+                ["NoRunningVote"] = "<color=#FF0000>[Skip Night] There is currently no vote active.</color>",
+                ["DoubleVote"] = "<color=#FF0000>[Skip Night] You have already voted.</color>"
             }, this);
             if (config.DebugMode)
             {
@@ -159,31 +159,31 @@ namespace Oxide.Plugins
             int requiredVotes = Mathf.CeilToInt(totalPlayers * (config.RequiredPercentage / 100f));
             if (!player.HasPermission(config.permVoteDay))
             {
-                player.Message(lang.GetMessage("NoPermission", this, player.Id));
+                player.Message(lang.GetMessage("PermissionIssue", this, player.Id));
                 return;
             }
 
             if (!isVotingActive)
             {
-                player.Message(lang.GetMessage("NoActiveVote", this, player.Id));
+                player.Message(lang.GetMessage("NoRunningVote", this, player.Id));
                 return;
             }
 
             if (votedPlayers.Contains(player.Id))
             {
-                player.Message(lang.GetMessage("AlreadyVoted", this, player.Id));
+                player.Message(lang.GetMessage("DoubleVote", this, player.Id));
                 return;
             }
             if (permission.UserHasGroup(player.Id, config.GroupNameVIP))
             {
                 yesVotes += config.AmountVIP;
                 votedPlayers.Add(player.Id);
-                player.Message(string.Format(lang.GetMessage("VoteCount", this, player.Id), yesVotes, requiredVotes));
+                player.Message(string.Format(lang.GetMessage("VoteAmount", this, player.Id), yesVotes, requiredVotes));
                 return;
             }
             votedPlayers.Add(player.Id);
             yesVotes++;
-            player.Message(string.Format(lang.GetMessage("VoteCount", this, player.Id), yesVotes, requiredVotes));
+            player.Message(string.Format(lang.GetMessage("VoteAmount", this, player.Id), yesVotes, requiredVotes));
         }
 
         private void StartVote()
@@ -194,7 +194,7 @@ namespace Oxide.Plugins
             }
             
             int requiredVotes = Mathf.CeilToInt(totalPlayers * (config.RequiredPercentage / 100f));
-            BroadcastToServer("VoteStarted", config.VoteDuration, requiredVotes);
+            BroadcastToServer("VoteStart", config.VoteDuration, requiredVotes);
             
             voteTimer = timer.Once(config.VoteDuration, EndVote);
         }
@@ -225,12 +225,12 @@ namespace Oxide.Plugins
 
                 if (yesVotes >= requiredVotes)
                 {
-                    BroadcastToServer("VotePassed", yesVotes, requiredVotes);
+                    BroadcastToServer("VoteSuccess", yesVotes, requiredVotes);
                     TOD_Sky.Instance.Cycle.Hour = 8f;
                 }
                 else
                 {
-                    BroadcastToServer("VoteFailed", yesVotes, requiredVotes);
+                    BroadcastToServer("VoteFail", yesVotes, requiredVotes);
                 }
             }
 
