@@ -31,6 +31,9 @@ namespace Oxide.Plugins
             [JsonProperty("At what time should the vote start")]
             public int VoteStartTime = 19;
 
+            [JsonProperty("To what time should the time should be set after a vote")]
+            public int VoteToTime = 7;
+
             [JsonProperty("How long should the vote take (seconds)")]
             public float VoteDuration = 60f;
 
@@ -90,13 +93,13 @@ namespace Oxide.Plugins
         {
             lang.RegisterMessages(new Dictionary<string, string>
             {
-                ["VoteStart"] = "<color=#FFFF00>[Skip Night] A vote to skip the night has started! You have {0} seconds to vote. Type /skipnight to vote. {1} votes are needed to pass.</color>",
-                ["VoteAmount"] = "<color=#00FF00>[Skip Night] Your vote made the total untill now: {0} votes out of {1} needed.</color>",
-                ["VoteSuccess"] = "<color=#00FF00>[Skip Night] You want daytime! There were {0} votes out of {1} needed. Skipping to daytime.</color>",
-                ["VoteFail"] = "<color=#FF0000>[Skip Night] The vote failed. {0} votes out of {1} needed. The night will continue.</color>",
-                ["PermissionIssue"] = "<color=#FF0000>[Skip Night] You do not have permission to use this command.</color>",
-                ["NoRunningVote"] = "<color=#FF0000>[Skip Night] There is currently no vote active.</color>",
-                ["DoubleVote"] = "<color=#FF0000>[Skip Night] You have already voted.</color>"
+                ["VoteStart"] = "<color=#f3a535>[Skip Night] </color> <color=#e7e5e3> A vote to skip the night has started! You have {0} seconds to vote. Type /skipnight to vote. {1} votes are needed to pass.</color>",
+                ["VoteAmount"] = "<color=#f3a535>[Skip Night] </color> <color=#e7e5e3> Your vote made the total untill now: {0} votes out of {1} needed.</color>",
+                ["VoteSuccess"] = "<color=#f3a535>[Skip Night] </color> <color=#e7e5e3> You want daytime! There were {0} votes out of {1} needed. Skipping to daytime.</color>",
+                ["VoteFail"] = "<color=#f3a535>[Skip Night] </color> <color=#e7e5e3> The vote failed. {0} votes out of {1} needed. The night will continue.</color>",
+                ["PermissionIssue"] = "<color=#f3a535>[Skip Night] </color> <color=#e7e5e3> You do not have permission to use this command.</color>",
+                ["NoRunningVote"] = "<color=#f3a535>[Skip Night] </color> <color=#e7e5e3> There is currently no vote active.</color>",
+                ["DoubleVote"] = "<color=#f3a535>[Skip Night] </color> <color=#e7e5e3> You have already voted.</color>"
             }, this);
             if (config.DebugMode)
             {
@@ -226,7 +229,8 @@ namespace Oxide.Plugins
                 if (yesVotes >= requiredVotes)
                 {
                     BroadcastToServer("VoteSuccess", yesVotes, requiredVotes);
-                    TOD_Sky.Instance.Cycle.Hour = 8f;
+                    TOD_Sky.Instance.Cycle.Day = TOD_Sky.Instance.Cycle.Day + 1;
+                    TOD_Sky.Instance.Cycle.Hour = config.VoteToTime;
                 }
                 else
                 {
