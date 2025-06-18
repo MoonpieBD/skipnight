@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace Oxide.Plugins
 {
-    [Info("SkipNight", "C-Rust", "1.2.1")]
+    [Info("SkipNight", "C-Rust", "1.2.2")]
     [Description("Advanced player skipnight system")]
 
     public class SkipNight : CovalencePlugin
@@ -31,7 +31,7 @@ namespace Oxide.Plugins
             [JsonProperty("At what time should the vote start")]
             public int VoteStartTime = 19;
 
-            [JsonProperty("To what time should the time should be set after a vote")]
+            [JsonProperty("To what hour should the time be set after a vote")]
             public int VoteToTime = 7;
 
             [JsonProperty("How long should the vote take (seconds)")]
